@@ -30,6 +30,7 @@ Other instructions for body text:
 import re
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime, tzinfo
+from email.headerregistry import Address
 from typing import Self, assert_never
 from zoneinfo import ZoneInfo
 
@@ -1662,21 +1663,45 @@ class HostReferenceReminderEmail(EmailBase):
 class ModeratorNoteEmail(EmailBase):
     """Sent to a user to notify them they have received a moderator note."""
 
+    # The note's markdown text, if the moderator chose to include it in the email.
+    note_content: str | None
+
     @property
     def string_key_base(self) -> str:
         return "moderator_note"
 
+    @property
+    def sender(self) -> Address:
+        # Moderator notes come from the moderation mailbox so that users can reply to them.
+        return Address(config.MODERATION_EMAIL_SENDER, addr_spec=config.MODERATION_EMAIL_ADDRESS)
+
+    def get_preview_line(self, loc_context: LocalizationContext) -> str | None:
+        return markdown_to_plaintext(self.note_content) if self.note_content else None
+
     def get_body_blocks(self, loc_context: LocalizationContext) -> list[EmailBlock]:
         builder = self._body_builder(loc_context)
-        builder.para(".purpose")
+        if self.note_content:
+            builder.para(".purpose_with_note")
+            builder.quote(self.note_content, markdown=True)
+            builder.para(".acknowledge_request")
+            builder.para(".reply_instructions")
+        else:
+            builder.para(".purpose")
         # Users with moderator notes are "jailed": any URL will show the note before
         # letting them use the platform.
         builder.action(urls.dashboard_link(), ".view_action")
         return builder.build()
 
     @classmethod
+    def from_notification(cls, data: notification_data_pb2.ModNoteCreate, *, user_name: str) -> Self:
+        return cls(user_name=user_name, note_content=data.content or None)
+
+    @classmethod
     def test_instances(cls) -> list[Self]:
-        return [cls(user_name="Alice")]
+        return [
+            cls(user_name="Alice", note_content=None),
+            cls(user_name="Alice", note_content="Please **add** a profile photo so that your hosts can recognise you."),
+        ]
 
 
 @dataclass(kw_only=True, slots=True)

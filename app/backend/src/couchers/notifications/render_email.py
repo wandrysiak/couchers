@@ -123,7 +123,7 @@ def get_notification_email(notification: Notification, *, user_name: str) -> Ema
         case NotificationTopicAction.general__new_blog_post:
             return emails.NewBlogPostEmail.from_notification(data, user_name=user_name)
         case NotificationTopicAction.modnote__create:
-            return emails.ModeratorNoteEmail(user_name=user_name)
+            return emails.ModeratorNoteEmail.from_notification(data, user_name=user_name)
         case NotificationTopicAction.onboarding__reminder:
             return emails.OnboardingReminderEmail(user_name=user_name, initial=notification.key == "1")
         case NotificationTopicAction.password__change:

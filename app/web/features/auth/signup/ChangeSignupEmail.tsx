@@ -44,8 +44,7 @@ export default function ChangeSignupEmail({ email, className }: ChangeSignupEmai
   const { handleSubmit, register, reset: resetForm, watch } = useForm<ChangeSignupEmailFormData>();
   const newSignupEmail = watch("newSignupEmail", "");
 
-  const isEmailChanged =
-    lowercaseAndTrimField(newSignupEmail) !== lowercaseAndTrimField(email);
+  const isEmailChanged = lowercaseAndTrimField(newSignupEmail) !== lowercaseAndTrimField(email);
 
   const isSubmitDisabled = !newSignupEmail.trim() || !isEmailChanged;
 

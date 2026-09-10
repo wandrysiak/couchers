@@ -35,13 +35,20 @@ interface ChangeSignupEmailProps {
   className?: string;
 }
 
-export default function ChangeSignupEmail({ className }: ChangeSignupEmailProps) {
+export default function ChangeSignupEmail({ email, className }: ChangeSignupEmailProps) {
   const { t } = useTranslation([AUTH, GLOBAL]);
   const { authActions, authState } = useAuthContext();
 
   const [changedEmail, setChangedEmail] = useState<boolean>(false);
 
-  const { handleSubmit, register, reset: resetForm } = useForm<ChangeSignupEmailFormData>();
+  const { handleSubmit, register, reset: resetForm, watch } = useForm<ChangeSignupEmailFormData>();
+  const newSignupEmail = watch("newSignupEmail", "");
+
+  const isEmailChanged =
+    lowercaseAndTrimField(newSignupEmail) !== lowercaseAndTrimField(email);
+
+  const isSubmitDisabled = !newSignupEmail.trim() || !isEmailChanged;
+
   const onSubmit = handleSubmit(({ newSignupEmail }) => {
     const sanitizedEmail = lowercaseAndTrimField(newSignupEmail);
     setChangedEmail(true);
@@ -83,7 +90,7 @@ export default function ChangeSignupEmail({ className }: ChangeSignupEmailProps)
               name="newSignupEmail"
               fullWidth
             />
-            <Button fullWidth={true} loading={isChangeSignupEmailLoading} type="submit">
+            <Button fullWidth loading={isChangeSignupEmailLoading} type="submit" disabled={isSubmitDisabled}>
               {t("auth:change_signup_email_form.signup_change_email")}
             </Button>
           </StyledForm>

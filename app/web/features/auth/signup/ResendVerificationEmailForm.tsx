@@ -58,7 +58,7 @@ export default function ResendVerificationEmailForm() {
           <>{t("auth:sign_up_resend_verification_done")}</>
         )}
       </Typography>
-      <ChangeSignupEmail />
+      <ChangeSignupEmail  email={authState.signupEmail ?? ""} />
     </>
   );
 }
